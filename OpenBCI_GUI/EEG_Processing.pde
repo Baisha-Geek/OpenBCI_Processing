@@ -71,7 +71,7 @@ class EEG_Processing_User {
         
         //detect the peak in the Alpha band
         if ((FFT_freq_Hz >= alpha_band_Hz[0]) & (FFT_freq_Hz <= alpha_band_Hz[1])) {
-          if (Ichan == (2-1)) println("EEG_Processing_User: Ichan = " + Ichan + ", Freq = " + FFT_freq_Hz + "Hz, FFT Value = " + FFT_value_uV + "uV/bin"); 
+          //if (Ichan == (2-1)) println("EEG_Processing_User: Alpha Band: Ichan = " + Ichan + ", Freq = " + FFT_freq_Hz + "Hz, FFT Value = " + FFT_value_uV + "uV/bin"); 
           //this bin is indeed inside the alpha band.  Decide if this is the max value...
           if (FFT_value_uV > alpha_uVrms[Ichan]) {
             //the current FFT bin is bigger, so hold onto it!
@@ -82,7 +82,8 @@ class EEG_Processing_User {
         
         //get the mean of the guard band
         for (int Iband=0; Iband < 2; Iband++) {
-          if ((FFT_freq_Hz >= guard_band_Hz[Iband][0]) & (FFT_freq_Hz <= guard_band_Hz[Iband][0])) {
+          if ((FFT_freq_Hz >= guard_band_Hz[Iband][0]) && (FFT_freq_Hz <= guard_band_Hz[Iband][1])) {
+            //if (Ichan == (2-1)) println("EEG_Processing_User: Guard Band: Ichan = " + Ichan + ", Freq = " + FFT_freq_Hz + "Hz, FFT Value = " + FFT_value_uV + "uV/bin"); 
             guard_count_bins++;
             guard_uVrms[Ichan] += FFT_value_uV;  //sum, as first step to computing the mean
           }
@@ -99,17 +100,19 @@ class EEG_Processing_User {
       
      //decide if there has been an alpha detection
      isAlphaDetected[Ichan]=applyDetectionRules(alpha_uVrms[Ichan],guard_uVrms[Ichan]);
-     if (Ichan == 2-1) {
-       println("EEG_Processing: process: Ichan = " + Ichan + ", alpha_uVrms = " + alpha_uVrms[Ichan] + ", guard_uVrms = " + guard_uVrms[Ichan]);
-     }
       
     } //close loop over channels 
   } // close process() method
   
   boolean applyDetectionRules(float alpha_uVrms, float guard_uVrms) {
-    if ((alpha_uVrms >= alpha_detection_threshold_uV) && (guard_uVrms < guard_rejection_threshold_uV)) {
-      println("EEG_Processing: applyDetectionRules: ALPHA DETECTED!!!");
+    if (alpha_uVrms >= alpha_detection_threshold_uV) {
+     if (guard_uVrms < guard_rejection_threshold_uV) {
+       //println("EEG_Processing: applyDetectionRules: ALPHA DETECTED!!!");
+       return true;
+     } else {
+      //println("EEG_Processing: applyDetectionRules: Alpha detected but Guard Rejected...");
       return true;
+     }
     } else {
       return false;
     }
