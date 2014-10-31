@@ -5,12 +5,25 @@ class EEG_Processing_User {
   private int nchan;  
   
   //add your own variables here
-
+  float[] alpha_band_Hz = {7.5f, 11.5f};
+  float[] alpha_uVrms;
+  float[] max_alpha_freq_Hz;
+  float[][] guard_band_Hz = {{3.0, 6.5},{13.0, 18.0}};
+  float[] guard_uVrms;
+  boolean[] isAlphaDetected;
+  float alpha_detection_threshold_uV = 3.8;
+  float guard_rejection_threshold_uV = 1.6; 
  
   //class constructor
   EEG_Processing_User(int NCHAN, float sample_rate_Hz) {
-    nchan = NCHAN;
+      nchan = NCHAN;
     fs_Hz = sample_rate_Hz;
+    
+    //create the arrays
+    alpha_uVrms = new float[nchan];
+    max_alpha_freq_Hz = new float[nchan];
+    guard_uVrms = new float[nchan];
+    isAlphaDetected = new boolean[nchan];
   }
   
   //add some functions here...if you'd like
@@ -23,23 +36,29 @@ class EEG_Processing_User {
 
     //for example, you could loop over each EEG channel to do some sort of time-domain processing 
     //using the sample values that have already been filtered, as will be plotted on the display
-    float EEG_value_uV;
-    for (int Ichan=0;Ichan < nchan; Ichan++) {
-      //loop over each NEW sample
-      int indexOfNewData = data_forDisplay_uV[Ichan].length - data_newest_uV[Ichan].length;
-      for (int Isamp=indexOfNewData; Isamp < data_forDisplay_uV[Ichan].length; Isamp++) {
-        EEG_value_uV = data_forDisplay_uV[Ichan][Isamp];  // again, this is from the filtered data that is ready for display
-        
-        //add your processing here...
-        
-        
-        //println("EEG_Processing_User: Ichan = " + Ichan + ", Isamp = " + Isamp + ", EEG Value = " + EEG_value_uV + " uV");
-      }
-    }
+//    float EEG_value_uV;
+//    for (int Ichan=0;Ichan < nchan; Ichan++) {
+//      //loop over each NEW sample
+//      int indexOfNewData = data_forDisplay_uV[Ichan].length - data_newest_uV[Ichan].length;
+//      for (int Isamp=indexOfNewData; Isamp < data_forDisplay_uV[Ichan].length; Isamp++) {
+//        EEG_value_uV = data_forDisplay_uV[Ichan][Isamp];  // again, this is from the filtered data that is ready for display
+//        
+//        //add your processing here...
+//        
+//        
+//        //println("EEG_Processing_User: Ichan = " + Ichan + ", Isamp = " + Isamp + ", EEG Value = " + EEG_value_uV + " uV");
+//      }
+//    }
 
     //OR, you could loop over each EEG channel and do some sort of frequency-domain processing from the FFT data
     float FFT_freq_Hz, FFT_value_uV;
     for (int Ichan=0;Ichan < nchan; Ichan++) {
+      
+      //reset previous value in preparation for new value...added by CHIP 2014-10-24
+      alpha_uVrms[Ichan] = 0.0f;
+      max_alpha_freq_Hz[Ichan] = 0.0f;
+      guard_uVrms[Ichan] = 0.0f;
+      int guard_count_bins = 0;
       
       //loop over frequency bin
       for (int Ibin=0; Ibin < fftBuff[Ichan].specSize(); Ibin++) {
@@ -48,9 +67,8 @@ class EEG_Processing_User {
         
         //println("EEG_Processing_User: Ichan = " + Ichan + ", Freq = " + FFT_freq_Hz + "Hz, FFT Value = " + FFT_value_uV + "uV/bin");      
         
-        //////// add your processing here...
+        //////// add your processing here...added by CHIP 2014-10-24
         
-<<<<<<< HEAD
         //detect the peak in the Alpha band
         if ((FFT_freq_Hz >= alpha_band_Hz[0]) & (FFT_freq_Hz <= alpha_band_Hz[1])) {
           //if (Ichan == (2-1)) println("EEG_Processing_User: Alpha Band: Ichan = " + Ichan + ", Freq = " + FFT_freq_Hz + "Hz, FFT Value = " + FFT_value_uV + "uV/bin"); 
@@ -70,13 +88,10 @@ class EEG_Processing_User {
             guard_uVrms[Ichan] += FFT_value_uV;  //sum, as first step to computing the mean
           }
         }
-=======
         
->>>>>>> origin/master
-        
+        /////// End of added by CHIP 2014-10-24
  
       } // close loop over frequency bins
-<<<<<<< HEAD
       
      ///// more code added by CHIP 2014-10-24
      
@@ -103,11 +118,6 @@ class EEG_Processing_User {
     }
 
   }
-=======
-    } //close loop over channels 
-  } // close process() method
-  
->>>>>>> origin/master
   
   
 } //close class definition
