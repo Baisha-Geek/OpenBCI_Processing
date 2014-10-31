@@ -44,6 +44,12 @@ class Gui_Manager {
   Button smoothingButton;
   Button maxDisplayFreqButton;
   Button showPolarityButton;
+
+  //these two buttons toggle between EEG graph state (they are mutually exclusive states)
+  Button showMontageButton; // to show uV time graph as opposed to channel controller
+  Button showChannelControllerButton; //to drawChannelController on top of gMontage
+  boolean isChannelControllerVisible;
+
   TextBox titleMontage, titleFFT,titleSpectrogram;
   TextBox[] chanValuesMontage;
   TextBox[] impValuesMontage;
@@ -55,7 +61,7 @@ class Gui_Manager {
   int whichChannelForSpectrogram;
 
   // MontageController mc;
-  MontageController mc;
+  ChannelController cc;
   
   private float fftYOffset[];
   private float default_vertScale_uV=200.0; //this defines the Y-scale on the montage plots...this is the vertical space between traces
@@ -98,10 +104,10 @@ class Gui_Manager {
     fontInfo = new PlotFontInfo();
 
     //montage control panel variables
-    float x_mc = float(win_x)*(left_right_split+gutter_right);
-    float y_mc = float(win_y)*(gutter_topbot+title_gutter+spacer_top);
-    float w_mc = float(win_x)*(0.08f-gutter_right); //width of montage controls (on left of montage)
-    float h_mc = float(win_y)*(available_top2bot-title_gutter-spacer_top); //height of montage controls (on left of montage)
+    float x_cc = float(win_x)*(left_right_split+gutter_right);
+    float y_cc = float(win_y)*(gutter_topbot+title_gutter+spacer_top);
+    float w_cc = float(win_x)*(0.08f-gutter_right); //width of montage controls (on left of montage)
+    float h_cc = float(win_y)*(available_top2bot-title_gutter-spacer_top); //height of montage controls (on left of montage)
   
     //setup the montage plot...the right side 
     default_vertScale_uV = default_yScale_uV;  //here is the vertical scaling of the traces
@@ -117,7 +123,14 @@ class Gui_Manager {
     setupMontagePlot(gMontage, win_x, win_y, axisMontage_relPos,displayTime_sec,fontInfo,filterDescription);
   
     //setup montage controller
-    mc = new MontageController(x_mc, y_mc, w_mc, h_mc);
+    cc = new ChannelController(x_cc, y_cc, w_cc, h_cc, axes_x, axes_y);
+
+    println("Buttons: " + int(float(win_x)*axisMontage_relPos[0]) + ", " + (int(float(win_y)*axisMontage_relPos[1])-40));
+
+    showMontageButton = new Button (int(float(win_x)*axisMontage_relPos[0]), int(float(win_y)*axisMontage_relPos[1])-45, 100, 20, "Graph", 14); 
+    showChannelControllerButton = new Button (int(float(win_x)*axisMontage_relPos[0])+100, int(float(win_y)*axisMontage_relPos[1])-45, 100, 20, "Channel Settings", 14);
+    showMontageButton.setIsActive(true);
+    showChannelControllerButton.setIsActive(false);
 
 
     //setup the FFT plot...bottom on left side
@@ -736,9 +749,12 @@ class Gui_Manager {
     
     //draw montage or spectrogram
     if (showSpectrogram == false) {
-      //show time-domain montage
-      gMontage.draw(); 
-      titleMontage.draw();
+
+      //show time-domain montage, only if full channel controller is not visible, to save some processing
+      if(cc.showFullController == false){
+        gMontage.draw(); 
+        titleMontage.draw();
+      }
     
       //add annotations
       if (showMontageValues) {
@@ -772,7 +788,7 @@ class Gui_Manager {
     stopButton.draw();
 
     //commented out because pages 1-2 are being moved to the left of the EEG montage
-    guiPageButton.draw();
+    // guiPageButton.draw();
 
     switch (guiPage) {  //the rest of the elements depend upon what GUI page we're on
       //note: GUI_PAGE_CHANNEL_ON_OFF is the default at the end
@@ -814,9 +830,47 @@ class Gui_Manager {
     // }
     // controlPanelCollapser.draw();
 
+    cc.draw();
+    showMontageButton.draw();
+    showChannelControllerButton.draw();
 
-    mc.draw();
+  }
 
+  public void mousePressed(){
+    verbosePrint("gui.mousePressed();");
+    //if showMontage button pressed
+    if(showMontageButton.isMouseHere()){
+      //turn off visibility of channel full controller
+      cc.showFullController = false;
+      showMontageButton.setIsActive(true);
+      showChannelControllerButton.setIsActive(false);
+    }
+    //if showChannelController is pressed
+    if(showChannelControllerButton.isMouseHere()){
+      cc.showFullController = true;
+      showMontageButton.setIsActive(false);
+      showChannelControllerButton.setIsActive(true);
+    }
+
+    //turn off visibility of graph
+    // turn on drawing and interactivity of channel controller
+
+    //however, the on/off & impedance values must show to the right at all times ... so it should change a boolean in ChannelController
+
+  }
+
+  public void mouseReleased(){
+    verbosePrint("gui.mouseReleased();");
+
+    stopButton.setIsActive(false);
+    guiPageButton.setIsActive(false);
+    intensityFactorButton.setIsActive(false);
+    loglinPlotButton.setIsActive(false);
+    filtBPButton.setIsActive(false);
+    smoothingButton.setIsActive(false);
+    showPolarityButton.setIsActive(false);
+    maxDisplayFreqButton.setIsActive(false);
+    biasButton.setIsActive(false);
   }
  
 };

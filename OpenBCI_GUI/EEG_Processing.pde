@@ -36,6 +36,7 @@ class EEG_Processing_User {
 
     //for example, you could loop over each EEG channel to do some sort of time-domain processing 
     //using the sample values that have already been filtered, as will be plotted on the display
+
 //    float EEG_value_uV;
 //    for (int Ichan=0;Ichan < nchan; Ichan++) {
 //      //loop over each NEW sample

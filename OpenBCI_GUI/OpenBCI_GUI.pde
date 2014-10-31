@@ -1,3 +1,4 @@
+
 ///////////////////////////////////////////////
 //
 // GUI for controlling the ADS1299-based OpenBCI
@@ -25,7 +26,7 @@ import java.util.Map.Entry;
 import processing.serial.*;  //for serial communication to Arduino/OpenBCI
 import java.awt.event.*; //to allow for event listener on screen resize
 
-boolean isVerbose = false; //set true if you want more verbosity in console
+boolean isVerbose = true; //set true if you want more verbosity in console
 
 long timeOfLastFrame = 0;
 int newPacketCounter = 0;
@@ -1052,6 +1053,10 @@ void mousePressed() {
     //limit interactivity of main GUI if control panel is open
     if(controlPanel.isOpen == false){
       //was the stopButton pressed?
+
+      gui.mousePressed(); // trigger mousePressed function in GUI
+      //most of the logic below should be migrated into the Gui_manager specific function above
+
       if (gui.stopButton.isMouseHere()) { 
         gui.stopButton.setIsActive(true);
         stopButtonWasPressed(); 
@@ -1200,40 +1205,14 @@ void mouseReleased() {
   //interacting with control panel
   if(controlPanel.isOpen){
     //if clicked in panel
-
-      controlPanel.CPmouseReleased();
-
-    // if(mouseX > 0 && mouseX < controlPanel.w && mouseY > 0 && mouseY < controlPanel.h){
-    //   println("CP mouse released");
-    //   controlPanel.CPmouseReleased();
-    // }
-    // //if clicked out of panel
-    // else{
-    //   println("outside of CP released");
-    //   controlPanel.isOpen = false;
-    //   controlPanelCollapser.setIsActive(false);
-    // }
+    controlPanel.CPmouseReleased();
   }
 
   if(systemMode >= 10){
-    gui.stopButton.setIsActive(false);
-    gui.guiPageButton.setIsActive(false);
-    gui.intensityFactorButton.setIsActive(false);
-    gui.loglinPlotButton.setIsActive(false);
-    gui.filtBPButton.setIsActive(false);
-    gui.smoothingButton.setIsActive(false);
-    gui.showPolarityButton.setIsActive(false);
-    gui.maxDisplayFreqButton.setIsActive(false);
-    gui.biasButton.setIsActive(false);
+
+    gui.mouseReleased();
     redrawScreenNow = true;  //command a redraw of the GUI whenever the mouse is released
   }
-
-
-  // if(systemMode == 0){
-  //   println("system mode = 10");
-  //   initSystem();
-  //   systemMode = 10; 
-  // }
 
   if(screenHasBeenResized){
     println("screen has been resized...");
