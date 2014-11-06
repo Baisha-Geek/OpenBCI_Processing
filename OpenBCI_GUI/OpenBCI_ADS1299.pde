@@ -35,17 +35,21 @@ final String[] command_deactivate_leadoffN_channel = {"Z", "X", "C", "V", "B", "
 final String command_biasAuto = "`";
 final String command_biasFixed = "~";
 
+// ArrayList defaultChannelSettings;
+
 class OpenBCI_ADS1299 {
   
   //final static int DATAMODE_TXT = 0;
-  final static int DATAMODE_BIN = 1;
-  final static int DATAMODE_BIN_WAUX = 2;
+  final static int DATAMODE_BIN = 2;
+  final static int DATAMODE_BIN_WAUX = 1;  //switched to this value so that receiving Accel data is now the default
   //final static int DATAMODE_BIN_4CHAN = 4;
   
   final static int STATE_NOCOM = 0;
   final static int STATE_COMINIT = 1;
-  final static int STATE_NORMAL = 2;
-  final static int COM_INIT_MSEC = 5000; //you may need to vary this for your computer or your Arduino
+  final static int STATE_SYNCWITHHARDWARE = 2;
+  final static int STATE_NORMAL = 3;
+  final static int STATE_STOPPED = 4;
+  final static int COM_INIT_MSEC = 3000; //you may need to vary this for your computer or your Arduino
   
   int[] measured_packet_length = {0,0,0,0,0};
   int measured_packet_length_ind = 0;
@@ -54,7 +58,7 @@ class OpenBCI_ADS1299 {
   final static byte BYTE_START = (byte)0xA0;
   final static byte BYTE_END = (byte)0xC0;
   
-  int prefered_datamode = DATAMODE_BIN;
+  int prefered_datamode = DATAMODE_BIN_WAUX;
   
   int state = STATE_NOCOM;
   int dataMode = -1;
@@ -62,6 +66,7 @@ class OpenBCI_ADS1299 {
   //byte[] serialBuff;
   //int curBuffIndex = 0;
   DataPacket_ADS1299 dataPacket;
+  int nAuxValues;
   boolean isNewDataPacketAvailable = false;
   OutputStream output; //for debugging  WEA 2014-01-26
   int prevSampleIndex = 0;
@@ -69,23 +74,32 @@ class OpenBCI_ADS1299 {
   
   final float fs_Hz = 250.0f;  //sample rate used by OpenBCI board...set by its Arduino code
   final float ADS1299_Vref = 4.5f;  //reference voltage for ADC in ADS1299.  set by its hardware
-  final float ADS1299_gain = 24;  //assumed gain setting for ADS1299.  set by its Arduino code
-  final float scale_fac_uVolts_per_count = ADS1299_Vref / (pow(2,23)-1) / ADS1299_gain  * 1000000.f; //ADS1299 datasheet Table 7, confirmed through experiment
+  float ADS1299_gain = 24;  //assumed gain setting for ADS1299.  set by its Arduino code
+  float scale_fac_uVolts_per_count = ADS1299_Vref / (pow(2,23)-1) / ADS1299_gain  * 1000000.f; //ADS1299 datasheet Table 7, confirmed through experiment
+  //float LIS3DH_full_scale_G = 4;  // +/- 4G, assumed full scale setting for the accelerometer
+  //final float scale_fac_accel_G_per_count = 0.002;  //data sheet, 2 mg per "digit", which I assume is per "count"
+  final float scale_fac_accel_G_per_count = 1.0;
   final float leadOffDrive_amps = 6.0e-9;  //6 nA, set by its Arduino code
   
   boolean isBiasAuto = true;
+
+  final char[] EOT = {'$','$','$'};
+  char[] prev3chars = {'#','#','#'};
+  String defaultChannelSettings = "";
   
   //constructors
   OpenBCI_ADS1299() {};  //only use this if you simply want access to some of the constants
-  OpenBCI_ADS1299(PApplet applet, String comPort, int baud, int nValuesPerPacket) {
+  OpenBCI_ADS1299(PApplet applet, String comPort, int baud, int nEEGValuesPerPacket, boolean useAux, int nAuxValuesPerPacket) {
+    nAuxValues=nAuxValuesPerPacket;
     
     //choose data mode
-    //println("OpenBCI_ADS1299: prefered_datamode = " + prefered_datamode + ", nValuesPerPacket%8 = " + (nValuesPerPacket % 8));
-    if (prefered_datamode == DATAMODE_BIN) {
-      if ((nValuesPerPacket % 8) != 0) {
+    println("OpenBCI_ADS1299: prefered_datamode = " + prefered_datamode + ", nValuesPerPacket = " + nEEGValuesPerPacket);
+    if (prefered_datamode == DATAMODE_BIN_WAUX) {
+      if (!useAux) {
         //must be requesting the aux data, so change the referred data mode
-        prefered_datamode = DATAMODE_BIN_WAUX;
-        println("OpenBCI_ADS1299: nValuesPerPacket = " + nValuesPerPacket + " so setting prefered_datamode to " + prefered_datamode);
+        prefered_datamode = DATAMODE_BIN;
+        nAuxValues = 0;
+        //println("OpenBCI_ADS1299: nAuxValuesPerPacket = " + nAuxValuesPerPacket + " so setting prefered_datamode to " + prefered_datamode);
       }
     }
 
@@ -94,7 +108,7 @@ class OpenBCI_ADS1299 {
     dataMode = prefered_datamode;
 
     //allocate space for data packet
-    dataPacket = new DataPacket_ADS1299(nValuesPerPacket);
+    dataPacket = new DataPacket_ADS1299(nEEGValuesPerPacket,nAuxValuesPerPacket);
 
     println(" b");
 
@@ -139,18 +153,17 @@ class OpenBCI_ADS1299 {
     return 0;
   }
 
-  int updateState() {
-    //wait specified time for COM/serial port to initialize
-    if (state == STATE_COMINIT) {
-      // println("Initializing Serial: millis() = " + millis());
-      if ((millis() - prevState_millis) > COM_INIT_MSEC) {
-        //serial_openBCI.write(command_activates + "\n"); println("Processing: OpenBCI_ADS1299: activating filters");
-        println("OpenBCI_ADS1299: State = Normal");
-        
+  int finalizeCOMINIT() {
+    // //wait specified time for COM/serial port to initialize
+    // if (state == STATE_COMINIT) {
+    //   // println("Initializing Serial: millis() = " + millis());
+    //   if ((millis() - prevState_millis) > COM_INIT_MSEC) {
+    //     //serial_openBCI.write(command_activates + "\n"); println("Processing: OpenBCI_ADS1299: activating filters");
+    //     println("OpenBCI_ADS1299: State = NORMAL");
         changeState(STATE_NORMAL);
-        startRunning();
-      }
-    }
+    //     // startRunning();
+    //   }
+    // }
     return 0;
   }    
 
@@ -203,8 +216,9 @@ class OpenBCI_ADS1299 {
 
   void startDataTransfer(){
     if (serial_openBCI != null) {
-      // serial_openBCI.clear(); // clear anything in the com port's buffer
+      serial_openBCI.clear(); // clear anything in the com port's buffer
       // stopDataTransfer();
+      openBCI.changeState(STATE_NORMAL);  // make sure it's now interpretting as binary
       println("writing \'" + command_startBinary + "\' to the serial port...");
       serial_openBCI.write(command_startBinary);
     }
@@ -212,18 +226,49 @@ class OpenBCI_ADS1299 {
   
   void stopDataTransfer() {
     if (serial_openBCI != null) {
+      serial_openBCI.clear(); // clear anything in the com port's buffer
+      openBCI.changeState(STATE_STOPPED);  // make sure it's now interpretting as binary
       println("writing \'" + command_stop + "\' to the serial port...");
       serial_openBCI.write(command_stop);// + "\n");
-      serial_openBCI.clear(); // clear anything in the com port's buffer
     }
   }
   
   //read from the serial port
   int read() {  return read(false); }
   int read(boolean echoChar) {
+    // print("State: " + state);
     //get the byte
     byte inByte = byte(serial_openBCI.read());
-    if (echoChar) print(char(inByte));
+
+    //write the most recent char to the console
+    if (echoChar){  //if not in interpret binary (NORMAL) mode
+      // print(".");
+      char inASCII = char(inByte); 
+      print(char(inByte));
+
+      //keep track of previous three chars coming from OpenBCI
+      prev3chars[0] = prev3chars[1];
+      prev3chars[1] = prev3chars[2];
+      prev3chars[2] = inASCII;
+
+      if(hardwareSyncStep == 3 && inASCII != '$'){ //if we're retrieving channel settings from OpenBCI
+        defaultChannelSettings+=inASCII;
+      }
+
+      //if the last three chars are $$$, it means we are moving on to the next stage of initialization
+      if(prev3chars[0] == EOT[0] && prev3chars[1] == EOT[1] && prev3chars[2] == EOT[2]){
+        verbosePrint(" > EOT detected...");
+        // hardwareSyncStep++;
+        prev3chars[2] = '#';
+        if(hardwareSyncStep == 3){
+          println(defaultChannelSettings);
+          gui.cc.loadDefaultChannelSettings();
+        }
+        readyToSend = true; 
+        // println(hardwareSyncStep);
+        // syncWithHardware(); //haha, I'm getting very verbose with my naming... it's late...
+      }  
+    }
     
     //write raw unprocessed bytes to a binary data dump file
     if (output != null) {
@@ -252,8 +297,8 @@ class OpenBCI_ADS1299 {
   Channel 1 data  : 3 bytes 
   ...
   Channel 8 data  : 3 bytes
-  Aux Value : UP TO 6 bytes
-  End Indcator:    0xC0
+  Aux Values      : UP TO 6 bytes
+  End Indcator    : 0xC0
   TOTAL OF 33 bytes ALL DAY
   ********************************************************************* */
   int nDataValuesInPacket = 0;
@@ -271,24 +316,10 @@ class OpenBCI_ADS1299 {
       case 0:  
          //look for header byte  
          if (actbyte == byte(0xA0)) {          // look for start indicator
-          //println("OpenBCI_ADS1299: interpretBinaryStream: found 0xA0");
+          // println("OpenBCI_ADS1299: interpretBinaryStream: found 0xA0");
           PACKET_readstate++;
          } 
          break;
-      // case 1:
-      //    //look for byte that gives length of the payload  
-      //    nDataValuesInPacket = ((int)actbyte) / 4 - 1;   // get number of channels
-      //    //println("OpenBCI_ADS1299: interpretBinaryStream: nDataValuesInPacket = " + nDataValuesInPacket);
-      //    //if (nDataValuesInPacket != num_channels) { //old check, too restrictive
-      //    if ((nDataValuesInPacket < 0) || (nDataValuesInPacket > dataPacket.values.length)) {
-      //     serialErrorCounter++;
-      //     println("OpenBCI_ADS1299: interpretBinaryStream: given number of data values (" + nDataValuesInPacket + ") is not acceptable.  Ignoring packet. (" + serialErrorCounter + ")");
-      //     PACKET_readstate=0;
-      //    } else { 
-      //     localByteCounter=0; //prepare for next usage of localByteCounter
-      //     PACKET_readstate++;
-      //    }
-      //    break;
       case 1: 
         //check the packet counter
         // println("case 1");
@@ -317,6 +348,7 @@ class OpenBCI_ADS1299 {
             // all ADS channels arrived !
             //println("OpenBCI_ADS1299: interpretBinaryStream: localChannelCounter = " + localChannelCounter);
             PACKET_readstate++;
+            if (prefered_datamode != DATAMODE_BIN_WAUX) PACKET_readstate++;  //if not using AUX, skip over the next readstate
             localByteCounter = 0;
             localChannelCounter = 0;
             //isNewDataPacketAvailable = true;  //tell the rest of the code that the data packet is complete
@@ -332,11 +364,11 @@ class OpenBCI_ADS1299 {
         localAccelByteBuffer[localByteCounter] = actbyte;
         localByteCounter++;
         if (localByteCounter==2) {
-          // someArrayToHoldAccelerometerData = interpret16bitAsInt32(localAccelByteBuffer);
+          dataPacket.auxValues[localChannelCounter]  = interpret16bitAsInt32(localAccelByteBuffer);
           localChannelCounter++;
-          if (localChannelCounter==3) { //number of accelerometer axis) {  
+          if (localChannelCounter==nAuxValues) { //number of accelerometer axis) {  
             // all Accelerometer channels arrived !
-            //println("OpenBCI_ADS1299: interpretBinaryStream: localChannelCounter = " + localChannelCounter);
+            //println("OpenBCI_ADS1299: interpretBinaryStream: Accel Data: " + dataPacket.auxValues[0] + ", " + dataPacket.auxValues[1] + ", " + dataPacket.auxValues[2]);
             PACKET_readstate++;
             localByteCounter = 0;
             //isNewDataPacketAvailable = true;  //tell the rest of the code that the data packet is complete
@@ -436,22 +468,35 @@ class OpenBCI_ADS1299 {
     }
   }
   
-  int interpret24bitAsInt32(byte[] byteArray) {     
+  private int interpret24bitAsInt32(byte[] byteArray) {     
     //little endian
     int newInt = ( 
       ((0xFF & byteArray[0]) << 16) |
       ((0xFF & byteArray[1]) << 8) | 
       (0xFF & byteArray[2])
       );
-    if((newInt & 0x00800000) > 0){
+    if ((newInt & 0x00800000) > 0) {
       newInt |= 0xFF000000;
-    }else{
+    } else {
       newInt &= 0x00FFFFFF;
     }
     return newInt;
   }
   
-  int copyDataPacketTo(DataPacket_ADS1299 target) {
+  private int interpret16bitAsInt32(byte[] byteArray) {
+    int newInt = (
+      ((0xFF & byteArray[0]) << 8) |
+       (0xFF & byteArray[1])
+      );
+    if ((newInt & 0x00008000) > 0) {
+      newInt |= 0xFFFF0000;
+    } else {
+      newInt &= 0x0000FFFF;
+    }
+    return newInt;
+  }
+  
+  public int copyDataPacketTo(DataPacket_ADS1299 target) {
     isNewDataPacketAvailable = false;
     dataPacket.copyTo(target);
     return 0;
