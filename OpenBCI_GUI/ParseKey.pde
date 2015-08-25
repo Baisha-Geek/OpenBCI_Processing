@@ -54,7 +54,6 @@ void parseKey(char val) {
 
     case 'q':
       if(nchan == 16){
-        println("doing this thing...");
         deactivateChannel(9-1); 
       }
       break;
@@ -123,7 +122,6 @@ void parseKey(char val) {
     //activate channels 9-16 (DAISY MODE ONLY)
     case 'Q':
       if(nchan == 16){
-        println("doing this thing...");
         activateChannel(9-1);
       }
       break;
@@ -180,6 +178,13 @@ void parseKey(char val) {
 
     case '?':
       printRegisters();
+      break;
+
+    case 'd':
+      verbosePrint("Updating GUI's channel settings to default...");
+      gui.cc.loadDefaultChannelSettings();
+      //openBCI.serial_openBCI.write('d');
+      openBCI.configureAllChannelsToDefault();
       break;
       
     // //change the state of the impedance measurements...activate the N-channels
@@ -244,7 +249,8 @@ void parseKey(char val) {
     default:
      println("OpenBCI_GUI: '" + key + "' Pressed...sending to OpenBCI...");
      // if (openBCI.serial_openBCI != null) openBCI.serial_openBCI.write(key);//send the value as ascii with a newline character
-     if (serial_openBCI != null) serial_openBCI.write(key);//send the value as ascii with a newline character
+     //if (openBCI.serial_openBCI != null) openBCI.serial_openBCI.write(key);//send the value as ascii with a newline character
+     openBCI.sendChar(key);
     
      break;
   }
@@ -257,9 +263,9 @@ void parseKeycode(int val) {
       println("OpenBCI_GUI: parseKeycode(" + val + "): received BACKSPACE keypress.  Ignoring...");
       break;   
     case 9:
-      println("OpenBCI_GUI: parseKeycode(" + val + "): received TAB keypress.  Toggling Impedance Control...");
+      println("OpenBCI_GUI: parseKeycode(" + val + "): received TAB keypress.  Ignoring...");
       //gui.showImpedanceButtons = !gui.showImpedanceButtons;
-      gui.incrementGUIpage();
+      // gui.incrementGUIpage(); //deprecated with new channel controller
       break;    
     case 10:
       println("OpenBCI_GUI: parseKeycode(" + val + "): received ENTER keypress.  Ignoring...");
