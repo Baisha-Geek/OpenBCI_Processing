@@ -73,7 +73,8 @@ class Gui_Manager {
   
   private float fftYOffset[];
   private float default_vertScale_uV=200.0; //this defines the Y-scale on the montage plots...this is the vertical space between traces
-  private float[] vertScaleFactor = {1.0f, 2.0f, 5.0f, 50.0f, 0.25f, 0.5f};
+  //private float[] vertScaleFactor = {1.0f, 2.0f, 5.0f, 50.0f, 0.25f, 0.5f};
+  private float[] vertScaleFactor = {200.0f, 50.0f, 5.0f, 2.0f, 1.0f, 0.5f};
   private int vertScaleFactor_ind = 0;
   float vertScale_uV=default_vertScale_uV;
   float vertScaleMin_uV_whenLog = 0.1f;
@@ -744,7 +745,7 @@ class Gui_Manager {
     for (int Ichan=0; Ichan < data_std_uV.length; Ichan++) {
       //update the voltage values
       val = data_std_uV[Ichan];
-      chanValuesMontage[Ichan].string = String.format(getFmt(val),val) + " uVrms";
+      chanValuesMontage[Ichan].string = String.format(getFmt(val),val) + " uV mean"; //if using stddev, make " uVrms"
       if (montageTrace.is_railed != null) {
         if (montageTrace.is_railed[Ichan].is_railed == true) {
           chanValuesMontage[Ichan].string = "RAILED";
@@ -766,9 +767,9 @@ class Gui_Manager {
   
   private String getFmt(float val) {
     String fmt;
-      if (val > 100.0f) {
+      if (abs(val) > 100.0f) {
         fmt = "%.0f";
-      } else if (val > 10.0f) {
+      } else if (abs(val) > 10.0f) {
         fmt = "%.1f";
       } else {
         fmt = "%.2f";

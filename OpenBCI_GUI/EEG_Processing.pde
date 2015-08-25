@@ -249,7 +249,10 @@ class EEG_Processing {
   float[][] data_forDisplay_uV, //put data here that should be plotted on the screen
   FFT[] fftData) {              //holds the FFT (frequency spectrum) of the latest data
 
-      //loop over each EEG channel
+    double overall_sum=0.0;
+    int calc_type = 2; //1=stddev, 2=mean
+    
+    //loop over each EEG channel
     for (int Ichan=0;Ichan < nchan; Ichan++) {  
 
       //filter the data in the time domain
@@ -259,8 +262,23 @@ class EEG_Processing {
       //compute the standard deviation of the filtered signal...this is for the head plot
       float[] fooData_filt = dataBuffY_filtY_uV[Ichan];  //use the filtered data
       fooData_filt = Arrays.copyOfRange(fooData_filt, fooData_filt.length-((int)fs_Hz), fooData_filt.length);   //just grab the most recent second of data
-      data_std_uV[Ichan]=std(fooData_filt); //compute the standard deviation for the whole array "fooData_filt"
+      if (calc_type==1) { //stddev
+        data_std_uV[Ichan]=std(fooData_filt); //compute the standard deviation for the whole array "fooData_filt"
+      } else if (calc_type==2) { //mean
+        data_std_uV[Ichan]=mean(fooData_filt); //compute the mean of the whole array "fooData_filt"
+        overall_sum += data_std_uV[Ichan];
+      }
     } //close loop over channels
+    
+    //if computing mean, shift by overall mean
+    if (calc_type==2) {
+      double overall_mean = overall_sum / ((double)nchan);
+      for (int Ichan=0;Ichan < nchan; Ichan++) {  
+        data_std_uV[Ichan] -= overall_mean;
+        polarity[Ichan] = 1.0;
+        if (data_std_uV[Ichan] < 0.0) polarity[Ichan] = -1.0; 
+      }
+    }
 
     //find strongest channel
     int refChanInd = findMax(data_std_uV);
@@ -268,17 +286,18 @@ class EEG_Processing {
     float[] refData_uV = dataBuffY_filtY_uV[refChanInd];  //use the filtered data
     refData_uV = Arrays.copyOfRange(refData_uV, refData_uV.length-((int)fs_Hz), refData_uV.length);   //just grab the most recent second of data
 
-
-    //compute polarity of each channel
-    for (int Ichan=0; Ichan < nchan; Ichan++) {
-      float[] fooData_filt = dataBuffY_filtY_uV[Ichan];  //use the filtered data
-      fooData_filt = Arrays.copyOfRange(fooData_filt, fooData_filt.length-((int)fs_Hz), fooData_filt.length);   //just grab the most recent second of data
-      float dotProd = calcDotProduct(fooData_filt, refData_uV);
-      if (dotProd >= 0.0f) {
-        polarity[Ichan]=1.0;
-      } 
-      else {
-        polarity[Ichan]=-1.0;
+    if (calc_type != 2) {
+      //compute polarity of each channel
+      for (int Ichan=0; Ichan < nchan; Ichan++) {
+        float[] fooData_filt = dataBuffY_filtY_uV[Ichan];  //use the filtered data
+        fooData_filt = Arrays.copyOfRange(fooData_filt, fooData_filt.length-((int)fs_Hz), fooData_filt.length);   //just grab the most recent second of data
+        float dotProd = calcDotProduct(fooData_filt, refData_uV);
+        if (dotProd >= 0.0f) {
+          polarity[Ichan]=1.0;
+        } 
+        else {
+          polarity[Ichan]=-1.0;
+        }
       }
     }
   }

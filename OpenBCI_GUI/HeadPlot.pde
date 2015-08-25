@@ -844,7 +844,7 @@ class HeadPlot {
     
     for (int Ielec=0;Ielec<n_elec;Ielec++) {
       weight = electrode_color_weightFac[Ielec][pixel_Ix][pixel_Iy];
-      elec_volt = max(low,min(intensity_data_uV[Ielec],high));
+      elec_volt = max(low,min(abs(intensity_data_uV[Ielec]),high));
       
       if (use_polarity) elec_volt = elec_volt*polarity_data[Ielec];
       
