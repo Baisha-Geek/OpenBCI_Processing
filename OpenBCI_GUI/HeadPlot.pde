@@ -135,7 +135,7 @@ class HeadPlot {
 
     //define the electrode positions as the relative position [-1.0 +1.0] within the head
     //remember that negative "Y" is up and positive "Y" is down
-    float elec_relDiam = 0.12f; //was 0.1425 prior to 2014-03-23
+    float elec_relDiam = 0.10f; //was 0.1425 prior to 2014-03-23
     elec_diam = (int)(elec_relDiam*((float)circ_diam));
     setElectrodeLocations(n_elec,elec_relDiam);
     
@@ -171,8 +171,8 @@ class HeadPlot {
     //try loading the positions from a file
     int n_elec_to_load = n_elec+1;  //load the n_elec plus the reference electrode
     Table elec_relXY = new Table();
-    String default_fname = "electrode_positions_default.txt";
-    //String default_fname = "electrode_positions_12elec_scalp9.txt";
+    //String default_fname = "electrode_positions_default.txt";
+    String default_fname = "electrode_positions_DC_16.txt";
     try {
       elec_relXY = loadTable(default_fname,"header,csv"); //try loading the default file
     } catch (NullPointerException e) {};
