@@ -470,7 +470,7 @@ class Gui_Manager {
     
     // add title
     titleMontage = new TextBox("EEG Data (" + filterDescription + ")",0,0);
-    int x2 = x1 + int(round(0.5*axis_relPos[2]*float(win_x)));
+    int x2 = x1 + int(round(0.5*axis_relPos[2]*float(win_x))); //move to center
     int y2 = y1 - 2;  //deflect two pixels upward
     titleMontage.x = x2;
     titleMontage.y = y2;
