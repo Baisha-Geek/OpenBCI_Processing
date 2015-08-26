@@ -47,7 +47,7 @@ int openBCI_baud = 115200; //baud rate from the Arduino
 String playbackData_fname = "N/A"; //only used if loading input data from a file
 // String playbackData_fname;  //leave blank to cause an "Open File" dialog box to appear at startup.  USEFUL!
 float playback_speed_fac = 1.0f;  //make 1.0 for real-time.  larger for faster playback
-int currentTableRowIndex = 0;
+int currentTableRowIndex = 0; //715*250
 Table_CSV playbackData_table;
 int nextPlayback_millis = -100; //any negative number
 
