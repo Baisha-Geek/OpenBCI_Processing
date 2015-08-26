@@ -63,7 +63,7 @@ final int nPointsPerUpdate = 50; //update the GUI after this many data points ha
 
 /////Define variables related to OpenBCI board operations
 //define number of channels from openBCI...first EEG channels, then aux channels
-int nchan = 8; //Normally, 8 or 16.  Choose a smaller number to show fewer on the GUI
+int nchan = 16; //Normally, 8 or 16.  Choose a smaller number to show fewer on the GUI
 int n_aux_ifEnabled = 3;  // this is the accelerometer data CHIP 2014-11-03
 
 //define variables related to warnings to the user about whether the EEG data is nearly railed (and, therefore, of dubious quality)

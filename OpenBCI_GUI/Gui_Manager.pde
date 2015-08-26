@@ -74,7 +74,7 @@ class Gui_Manager {
   private float fftYOffset[];
   private float default_vertScale_uV=200.0; //this defines the Y-scale on the montage plots...this is the vertical space between traces
   //private float[] vertScaleFactor = {1.0f, 2.0f, 5.0f, 50.0f, 0.25f, 0.5f};
-  private float[] vertScaleFactor = {200.0f, 50.0f, 5.0f, 2.0f, 1.0f, 0.5f};
+  private float[] vertScaleFactor = {500.0f, 200.0f, 50.0f, 20.0f, 5.0f, 2.0f, 1.0f};
   private int vertScaleFactor_ind = 0;
   float vertScale_uV=default_vertScale_uV;
   float vertScaleMin_uV_whenLog = 0.1f;
@@ -103,14 +103,16 @@ class Gui_Manager {
     float spacer_top = float(controlPanelCollapser.but_dy)/float(win_y);
     float gutter_topbot = 0.03f;
     float gutter_left = 0.08f;  //edge around the GUI
-    float gutter_right = 0.015f;  //edge around the GUI
+    float gutter_right = 0.025f;  //edge around the GUI
+    float headPlot_fromTop = gutter_topbot+0.03f;
     float height_UI_tray = 0.1f + spacer_bottom; //0.1f;//0.10f;  //empty space along bottom for UI elements
-    float left_right_split = 0.45f;  //notional dividing line between left and right plots, measured from left
+    float left_right_split = 0.4f;  //notional dividing line between left and right plots, measured from left
     float available_top2bot = 1.0f - 2*gutter_topbot - height_UI_tray;
-    float up_down_split = 0.5f;   //notional dividing line between top and bottom plots, measured from top
+    float available_top2bot_headFFT = 1.0f - height_UI_tray - headPlot_fromTop - gutter_topbot;
+    float up_down_split = 0.6f;   //notional dividing line between top and bottom plots, measured from top
     float gutter_between_buttons = 0.005f; //space between buttons
     float title_gutter = 0.02f;
-    float headPlot_fromTop = 0.12f;
+
     fontInfo = new PlotFontInfo();
 
     //montage control panel variables
@@ -133,7 +135,7 @@ class Gui_Manager {
     float[] axisMontage_relPos = {  
       gutter_left, 
       height_UI_tray, 
-      (1.0f-left_right_split)-gutter_left-gutter_right, 
+      (left_right_split)-gutter_left+0.05, 
       available_top2bot-title_gutter-spacer_top
     }; //from left, from top, width, height
     axes_x = float(win_x)*axisMontage_relPos[2];  //width of the axis in pixels
@@ -173,11 +175,15 @@ class Gui_Manager {
     //   left_right_split-gutter_left-gutter_right, 
     //   available_top2bot*(1.0f-up_down_split) - gutter_topbot-title_gutter - spacer_top
     // }; //from left, from top, width, height
+    float nudge_x = 0.08f;
+    float new_x = gutter_left + left_right_split + nudge_x;
+    float botOfPlot = axisMontage_relPos[1]+axisMontage_relPos[3]; //bottom of montage plot
+    float topOfPlot = botOfPlot-(1.0-up_down_split)*available_top2bot_headFFT+gutter_topbot;
     float[] axisFFT_relPos = { 
-      gutter_left + left_right_split + 0.1f, 
-      up_down_split*available_top2bot + height_UI_tray + gutter_topbot, 
-      left_right_split-gutter_left-gutter_right, 
-      available_top2bot*(1.0f-up_down_split) - gutter_topbot-title_gutter - spacer_top
+      new_x, 
+      topOfPlot, 
+      (1.0-new_x)-gutter_right, 
+      botOfPlot - topOfPlot
     }; //from left, from top, width, height
     axes_x = int(float(win_x)*axisFFT_relPos[2]);  //width of the axis in pixels
     axes_y = int(float(win_y)*axisFFT_relPos[3]);  //height of the axis in pixels
@@ -199,9 +205,11 @@ class Gui_Manager {
     
     //setup the head plot...top on the left side
     float[] axisHead_relPos = axisFFT_relPos.clone();
+    botOfPlot = axisFFT_relPos[1] - 2*gutter_topbot;
+    topOfPlot = headPlot_fromTop;
     // axisHead_relPos[1] = gutter_topbot + spacer_top;  //set y position to be at top of left side
-    axisHead_relPos[1] = headPlot_fromTop;  //set y position to be at top of right side
-    axisHead_relPos[3] = available_top2bot*up_down_split  - gutter_topbot;
+    axisHead_relPos[1] = topOfPlot;  //set y position to be at top of right side
+    axisHead_relPos[3] = botOfPlot-topOfPlot; //height
     headPlot1 = new HeadPlot(axisHead_relPos[0],axisHead_relPos[1],axisHead_relPos[2],axisHead_relPos[3],win_x,win_y,nchan);
     setSmoothFac(smooth_fac);
     
