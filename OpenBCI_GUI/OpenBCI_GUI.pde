@@ -592,7 +592,7 @@ int getDataIfAvailable(int pointCounter) {
             synthesizeData(nchan, openBCI.get_fs_Hz(), openBCI.get_scale_fac_uVolts_per_count(), dataPacketBuff[lastReadDataPacketInd]);
             break;
           case DATASOURCE_PLAYBACKFILE: 
-            currentTableRowIndex=getPlaybackDataFromTable(playbackData_table,currentTableRowIndex,openBCI.get_scale_fac_uVolts_per_count(), dataPacketBuff[lastReadDataPacketInd]);
+            currentTableRowIndex=getPlaybackDataFromTable(playbackData_table,currentTableRowIndex,-1.0*openBCI.get_scale_fac_uVolts_per_count(), dataPacketBuff[lastReadDataPacketInd]); //flip polarity, assumes OpenBCI data was recorded into the negative inputs
             break;
           default:
             //no action
