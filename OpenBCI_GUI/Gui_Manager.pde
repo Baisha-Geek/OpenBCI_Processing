@@ -56,7 +56,7 @@ class Gui_Manager {
   TextBox[] impValuesMontage;
   boolean showMontageValues;
   public int guiPage;
-  boolean vertScaleAsLog = true;
+  boolean vertScaleAsLog = false;
   Spectrogram spectrogram;
   boolean showSpectrogram;
   int whichChannelForSpectrogram;
@@ -74,7 +74,8 @@ class Gui_Manager {
   private float fftYOffset[];
   private float default_vertScale_uV=200.0; //this defines the Y-scale on the montage plots...this is the vertical space between traces
   //private float[] vertScaleFactor = {1.0f, 2.0f, 5.0f, 50.0f, 0.25f, 0.5f};
-  private float[] vertScaleFactor = {500.0f, 200.0f, 50.0f, 20.0f, 5.0f, 2.0f, 1.0f};
+  //private float[] vertScaleFactor = {500.0f, 200.0f, 100.0f, 50.0f, 20.0f, 5.0f, 2.0f, 0.5f};
+  private float[] vertScaleFactor = {100.0f, 50.0f, 20.0f, 5.0f, 2.0f, 0.5f, 0.2f};
   private int vertScaleFactor_ind = 0;
   float vertScale_uV=default_vertScale_uV;
   float vertScaleMin_uV_whenLog = 0.1f;
@@ -297,7 +298,7 @@ class Gui_Manager {
     x = calcButtonXLocation(Ibut++, win_x, w, xoffset,gutter_between_buttons);
     filtBPButton = new Button(x,y,w,h,"BP Filt\n" + eegProcessing.getShortFilterDescription(),fontInfo.buttonLabel_size);
 
-    set_vertScaleAsLog(true);
+    set_vertScaleAsLog(false);
     
     //setup start/stop button
     // x = win_x - int(gutter_right*float(win_x)) - w;

@@ -1,5 +1,6 @@
 //import ddf.minim.analysis.*; //for FFT
 
+
 class EEG_Processing_User {
   private float fs_Hz;  //sample rate
   private int nchan;  
@@ -17,9 +18,9 @@ class EEG_Processing_User {
 
   //here is the processing routine called by the OpenBCI main program...update this with whatever you'd like to do
   public void process(float[][] data_newest_uV, //holds raw EEG data that is new since the last call
-  float[][] data_long_uV, //holds a longer piece of buffered EEG data, of same length as will be plotted on the screen
-  float[][] data_forDisplay_uV, //this data has been filtered and is ready for plotting on the screen
-  FFT[] fftData) {              //holds the FFT (frequency spectrum) of the latest data
+    float[][] data_long_uV, //holds a longer piece of buffered EEG data, of same length as will be plotted on the screen
+    float[][] data_forDisplay_uV, //this data has been filtered and is ready for plotting on the screen
+    FFT[] fftData) {              //holds the FFT (frequency spectrum) of the latest data
 
       //for example, you could loop over each EEG channel to do some sort of time-domain processing 
     //using the sample values that have already been filtered, as will be plotted on the display
@@ -31,6 +32,7 @@ class EEG_Processing_User {
         EEG_value_uV = data_forDisplay_uV[Ichan][Isamp];  // again, this is from the filtered data that is ready for display
 
         //add your processing here...
+        //data_forDisplay_uV[Ichan][Isamp] -= channel_offset_uV[Ichan];
 
 
         //println("EEG_Processing_User: Ichan = " + Ichan + ", Isamp = " + Isamp + ", EEG Value = " + EEG_value_uV + " uV");
@@ -272,9 +274,11 @@ class EEG_Processing {
     
     //if computing mean, shift by overall mean
     if (calc_type==2) {
-      double overall_mean = overall_sum / ((double)nchan);
+      //double overall_mean = overall_sum / ((double)nchan);
+      double overall_mean = overall_sum / (8.0);  //forcing to 8 channels.  Kludge!  WEA 2016-01-25
       for (int Ichan=0;Ichan < nchan; Ichan++) {  
-        data_std_uV[Ichan] -= overall_mean;
+        //data_std_uV[Ichan] -= overall_mean;  //normal behavior
+        if (Ichan < 8) data_std_uV[Ichan] -= overall_mean;  //ignore top 8 channels.  Kludge!  WEA 2016-01-25
         polarity[Ichan] = 1.0;
         if (data_std_uV[Ichan] < 0.0) polarity[Ichan] = -1.0; 
       }

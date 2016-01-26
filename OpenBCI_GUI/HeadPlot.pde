@@ -172,7 +172,8 @@ class HeadPlot {
     int n_elec_to_load = n_elec+1;  //load the n_elec plus the reference electrode
     Table elec_relXY = new Table();
     //String default_fname = "electrode_positions_default.txt";
-    String default_fname = "electrode_positions_DC_16.txt";
+    //String default_fname = "electrode_positions_DC_16.txt"; //for phase I kickoff demo
+    String default_fname = "electrode_positions_DC_8.txt"; //for phase I final results demo
     try {
       elec_relXY = loadTable(default_fname,"header,csv"); //try loading the default file
     } catch (NullPointerException e) {};

@@ -25,6 +25,13 @@ import java.util.Map.Entry;
 import processing.serial.*;  //for serial communication to Arduino/OpenBCI
 import java.awt.event.*; //to allow for event listener on screen resize
 
+//for 1-material head
+//float[] chan_offset_uV = { 0, 0, 0, 0, 0, 0, 0, 0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0};
+
+//for 2-material head
+float[] chan_offset_uV = { -334.0, 440.0, -665.0, 873.0, 519.0, -1291.0, 1167.0, -188.0, 999999.0, 999909.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0};
+
+
 boolean isVerbose = false; //set true if you want more verbosity in console
 
 
@@ -47,7 +54,7 @@ int openBCI_baud = 115200; //baud rate from the Arduino
 String playbackData_fname = "N/A"; //only used if loading input data from a file
 // String playbackData_fname;  //leave blank to cause an "Open File" dialog box to appear at startup.  USEFUL!
 float playback_speed_fac = 1.0f;  //make 1.0 for real-time.  larger for faster playback
-int currentTableRowIndex = 0; //715*250
+int currentTableRowIndex = 715*250; //715*250
 Table_CSV playbackData_table;
 int nextPlayback_millis = -100; //any negative number
 
@@ -568,6 +575,13 @@ int getDataIfAvailable(int pointCounter) {
         for (int Ichan=0; Ichan < nchan; Ichan++) {   //loop over each cahnnel
           //scale the data into engineering units ("microvolts") and save to the "little buffer"
           yLittleBuff_uV[Ichan][pointCounter] = dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count() * (-1.0); //invert the data...assuming using N inputs!
+          
+          //remove offset!  WEA  2016-01-25
+          yLittleBuff_uV[Ichan][pointCounter] -= chan_offset_uV[Ichan];
+          if (chan_offset_uV[Ichan] > 9999) {
+            yLittleBuff_uV[Ichan][pointCounter] = 0.0;
+          }
+          //end added WEA 2016-01-25
         } 
         pointCounter++; //increment counter for "little buffer"
       }
