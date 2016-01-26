@@ -25,15 +25,13 @@ import java.util.Map.Entry;
 import processing.serial.*;  //for serial communication to Arduino/OpenBCI
 import java.awt.event.*; //to allow for event listener on screen resize
 
-//for 1-material head
-//float[] chan_offset_uV = { 0, 0, 0, 0, 0, 0, 0, 0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0};
-
-//for 2-material head
-float[] chan_offset_uV = { -334.0, 440.0, -665.0, 873.0, 519.0, -1291.0, 1167.0, -188.0, 999999.0, 999909.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0};
-
+//parameters for handling DC offset
+boolean flag_takeNewDCvalues = false; 
+//float[] chan_offset_uV = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //all zeros for no effect
+float[] chan_offset_uV = { 0, 0, 0, 0, 0, 0, 0, 0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0}; //disable upper 8 channels 
+//float[] chan_offset_uV = { -334.0, 440.0, -665.0, 873.0, 519.0, -1291.0, 1167.0, -188.0, 999999.0, 999909.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0, 999999.0}; //for 2-material head
 
 boolean isVerbose = false; //set true if you want more verbosity in console
-
 
 //used to switch between application states
 int systemMode = 0; /* Modes: 0 = system stopped/control panel setings / 10 = gui / 20 = help guide */
@@ -676,7 +674,7 @@ void processNewData() {
     float[] fooData_raw = dataBuffY_uV[Ichan];  //use the raw data for the FFT
     fooData_raw = Arrays.copyOfRange(fooData_raw, fooData_raw.length-Nfft, fooData_raw.length);   //trim to grab just the most recent block of data
     float meanData = mean(fooData_raw);  //compute the mean
-    for (int I=0; I < fooData_raw.length; I++) fooData_raw[I] -= meanData; //remove the mean (for a better looking FFT
+    for (int I=0; I < fooData_raw.length; I++) fooData_raw[I] -= meanData; //remove the mean (for a better looking FFT)
     
     //compute the FFT
     fftBuff[Ichan].forward(fooData_raw); //compute FFT on this channel of data
@@ -733,6 +731,20 @@ void processNewData() {
   // ...dataBuffY_filtY_uV[Ichan] is the full set of filtered data as shown in the time-domain plot in the GUI
   // ...fftBuff[Ichan] is the FFT data structure holding the frequency spectrum as shown in the freq-domain plot in the GUI
   eegProcessing_user.process(yLittleBuff_uV,dataBuffY_uV,dataBuffY_filtY_uV,fftBuff);
+  
+  //grab the new mean values for each channel, if commanded to by a user button
+  if (flag_takeNewDCvalues) {
+    flag_takeNewDCvalues = false;
+    for (int Ichan=0;Ichan < nchan; Ichan++) {
+      float lookback_sec = 2.0; int startSample =  dataBuffY_filtY_uV[Ichan].length - (int)(lookback_sec*openBCI.get_fs_Hz());
+      float sum = 0.0; int count=0;
+      for (int Isamp = startSample; Isamp < dataBuffY_filtY_uV[Ichan].length; Isamp++) {
+        sum += dataBuffY_filtY_uV[Ichan][Isamp];
+        count++;
+      }
+      chan_offset_uV[Ichan] += sum / ((float)count); //get mean (across time) of filtered data
+    }      
+  }
   
   //look to see if the latest data is railed so that we can notify the user on the GUI
   for (int Ichan=0;Ichan < nchan; Ichan++) is_railed[Ichan].update(dataPacketBuff[lastReadDataPacketInd].values[Ichan]);
@@ -897,6 +909,10 @@ void mousePressed() {
           if (gui.maxDisplayFreqButton.isMouseHere()) {
             gui.maxDisplayFreqButton.setIsActive(true);
             gui.incrementMaxDisplayFreq();
+          }
+          if (gui.takeDCNowButton.isMouseHere()) {
+            gui.takeDCNowButton.setIsActive(true);
+            takeDCValuesNow();
           }
           
     //      //check the detection button
@@ -1345,4 +1361,6 @@ void delay(int delay)
 //  );
 // }  
 
-
+void takeDCValuesNow() {
+  flag_takeNewDCvalues = true;
+}

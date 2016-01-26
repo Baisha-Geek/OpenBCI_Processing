@@ -45,6 +45,7 @@ class Gui_Manager {
   Button smoothingButton;
   Button maxDisplayFreqButton;
   Button showPolarityButton;
+  Button takeDCNowButton;
 
   //these two buttons toggle between EEG graph state (they are mutually exclusive states)
   Button showMontageButton; // to show uV time graph as opposed to channel controller
@@ -75,7 +76,7 @@ class Gui_Manager {
   private float default_vertScale_uV=200.0; //this defines the Y-scale on the montage plots...this is the vertical space between traces
   //private float[] vertScaleFactor = {1.0f, 2.0f, 5.0f, 50.0f, 0.25f, 0.5f};
   //private float[] vertScaleFactor = {500.0f, 200.0f, 100.0f, 50.0f, 20.0f, 5.0f, 2.0f, 0.5f};
-  private float[] vertScaleFactor = {100.0f, 50.0f, 20.0f, 5.0f, 2.0f, 0.5f, 0.2f};
+  private float[] vertScaleFactor = {20.0f, 5.0f, 2.0f, 0.5f, 0.2f,100.0f, 50.0f};
   private int vertScaleFactor_ind = 0;
   float vertScale_uV=default_vertScale_uV;
   float vertScaleMin_uV_whenLog = 0.1f;
@@ -275,6 +276,9 @@ class Gui_Manager {
     y = 2;
 
     x = calcButtonXLocation(Ibut++, win_x, w, xoffset,gutter_between_buttons);
+    takeDCNowButton = new Button(x,y,w,h,"Zero DC\n" + "Now",fontInfo.buttonLabel_size);
+
+    x = calcButtonXLocation(Ibut++, win_x, w, xoffset,gutter_between_buttons);
     maxDisplayFreqButton = new Button(x,y,w,h,"Max Freq\n" + round(maxDisplayFreq_Hz[maxDisplayFreq_ind]) + " Hz",fontInfo.buttonLabel_size);
 
     x = calcButtonXLocation(Ibut++, win_x, w, xoffset,gutter_between_buttons);
@@ -417,7 +421,6 @@ class Gui_Manager {
     
     if (maxDisplayFreqButton != null) maxDisplayFreqButton.setString("Max Freq\n" + round(maxDisplayFreq_Hz[maxDisplayFreq_ind]) + " Hz");
   }  
-  
   
   public void setDoNotPlotOutsideXlim(boolean state) {
     if (state) {
@@ -851,6 +854,7 @@ class Gui_Manager {
         smoothingButton.draw();
         showPolarityButton.draw();
         maxDisplayFreqButton.draw();
+        takeDCNowButton.draw();
         break;
       default:  //assume GUI_PAGE_CHANNEL_ONOFF:
         //show channel buttons
@@ -921,6 +925,7 @@ class Gui_Manager {
     cc.mouseReleased();
 
 
+    //clear the active status of any button
     stopButton.setIsActive(false);
     // guiPageButton.setIsActive(false);
     intensityFactorButton.setIsActive(false);
@@ -930,8 +935,11 @@ class Gui_Manager {
     smoothingButton.setIsActive(false);
     showPolarityButton.setIsActive(false);
     maxDisplayFreqButton.setIsActive(false);
+    takeDCNowButton.setIsActive(false);
     biasButton.setIsActive(false);
   }
+  
+  
  
 };
 
