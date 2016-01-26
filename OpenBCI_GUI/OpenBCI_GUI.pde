@@ -51,8 +51,9 @@ int openBCI_baud = 115200; //baud rate from the Arduino
 //here are variables that are used if loading input data from a CSV text file...double slash ("\\") is necessary to make a single slash
 String playbackData_fname = "N/A"; //only used if loading input data from a file
 // String playbackData_fname;  //leave blank to cause an "Open File" dialog box to appear at startup.  USEFUL!
-float playback_speed_fac = 1.0f;  //make 1.0 for real-time.  larger for faster playback
-int currentTableRowIndex = 715*250; //715*250
+float playback_speed_fac = 3.0f;  //make 1.0 for real-time.  larger for faster playback
+//int currentTableRowIndex = 715*250; //715*250
+int currentTableRowIndex = 0; //715*250
 Table_CSV playbackData_table;
 int nextPlayback_millis = -100; //any negative number
 

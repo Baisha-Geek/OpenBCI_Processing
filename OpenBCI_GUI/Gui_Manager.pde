@@ -76,7 +76,7 @@ class Gui_Manager {
   private float default_vertScale_uV=200.0; //this defines the Y-scale on the montage plots...this is the vertical space between traces
   //private float[] vertScaleFactor = {1.0f, 2.0f, 5.0f, 50.0f, 0.25f, 0.5f};
   //private float[] vertScaleFactor = {500.0f, 200.0f, 100.0f, 50.0f, 20.0f, 5.0f, 2.0f, 0.5f};
-  private float[] vertScaleFactor = {20.0f, 5.0f, 2.0f, 0.5f, 0.2f,100.0f, 50.0f};
+  private float[] vertScaleFactor = {20.0f, 10.0f, 5.0f, 2.0f, 1.0f, 0.5f, 0.2f,100.0f, 50.0f};
   private int vertScaleFactor_ind = 0;
   float vertScale_uV=default_vertScale_uV;
   float vertScaleMin_uV_whenLog = 0.1f;
