@@ -7,6 +7,7 @@ OpenBCI_GUI/*.bak
 OpenBCI_GUI/build-tmp/*
 OpenBCI_GUI\build-tmp\*
 OpenBCI_GUI/*.jpg
+OpenBCI_GUI/*.png
 
 
 
