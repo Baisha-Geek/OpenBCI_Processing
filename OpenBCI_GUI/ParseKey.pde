@@ -241,7 +241,8 @@ void parseKey(char val) {
 
       
     case 'm':
-     String picfname = "OpenBCI-" + getDateString() + ".jpg";
+     //String picfname = "OpenBCI-" + getDateString() + ".jpg";
+     String picfname = "OpenBCI-" + getDateString() + ".png";
      println("OpenBCI_GUI: 'm' was pressed...taking screenshot:" + picfname);
      saveFrame(picfname);    // take a shot of that!
      break;
