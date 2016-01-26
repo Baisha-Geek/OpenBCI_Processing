@@ -32,8 +32,6 @@ class EEG_Processing_User {
         EEG_value_uV = data_forDisplay_uV[Ichan][Isamp];  // again, this is from the filtered data that is ready for display
 
         //add your processing here...
-        //data_forDisplay_uV[Ichan][Isamp] -= channel_offset_uV[Ichan];
-
 
         //println("EEG_Processing_User: Ichan = " + Ichan + ", Isamp = " + Isamp + ", EEG Value = " + EEG_value_uV + " uV");
       }

@@ -576,12 +576,12 @@ int getDataIfAvailable(int pointCounter) {
           //scale the data into engineering units ("microvolts") and save to the "little buffer"
           yLittleBuff_uV[Ichan][pointCounter] = dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count() * (-1.0); //invert the data...assuming using N inputs!
           
-          //remove offset!  WEA  2016-01-25
+          //remove fixed DC offset!  WEA  2016-01-25, 2016-01-26
           yLittleBuff_uV[Ichan][pointCounter] -= chan_offset_uV[Ichan];
           if (chan_offset_uV[Ichan] > 9999) {
-            yLittleBuff_uV[Ichan][pointCounter] = 0.0;
+            yLittleBuff_uV[Ichan][pointCounter] = 0.0;  //this is a kludge for disabling certain channels
           }
-          //end added WEA 2016-01-25
+          //end added WEA 2016-01-25, 2016-01-26
         } 
         pointCounter++; //increment counter for "little buffer"
       }
@@ -615,6 +615,13 @@ int getDataIfAvailable(int pointCounter) {
         for (int Ichan=0; Ichan < nchan; Ichan++) {
           //scale the data into engineering units..."microvolts"
           yLittleBuff_uV[Ichan][pointCounter] = dataPacketBuff[lastReadDataPacketInd].values[Ichan]* openBCI.get_scale_fac_uVolts_per_count();
+          
+          //remove fixed DC offset!  WEA  2016-01-26
+          yLittleBuff_uV[Ichan][pointCounter] -= chan_offset_uV[Ichan];
+          if (chan_offset_uV[Ichan] > 9999) {
+            yLittleBuff_uV[Ichan][pointCounter] = 0.0;  //this is a kludge for disabling certain channels
+          }
+          //end added WEA 2016-01-26
         }
         pointCounter++;
       } //close the loop over data points
