@@ -276,7 +276,7 @@ class EEG_Processing {
       double overall_mean = overall_sum / (8.0);  //forcing to 8 channels.  Kludge!  WEA 2016-01-25
       for (int Ichan=0;Ichan < nchan; Ichan++) {  
         //data_std_uV[Ichan] -= overall_mean;  //normal behavior
-        //if (Ichan < 8) data_std_uV[Ichan] -= overall_mean;  //force mean to zero.  ignore top 8 channels.  Kludge!  WEA 2016-01-25
+        if (Ichan < 8) data_std_uV[Ichan] -= overall_mean;  //force mean to zero.  ignore top 8 channels.  Kludge!  WEA 2016-01-25
         polarity[Ichan] = 1.0;
         if (data_std_uV[Ichan] < 0.0) polarity[Ichan] = -1.0; 
       }
