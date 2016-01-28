@@ -68,6 +68,7 @@ class EEG_Processing {
   private int currentNotch_ind = 0;  // set to 0 to default to 60Hz, set to 1 to default to 50Hz
   float data_std_uV[];
   float polarity[];
+  private boolean zeroMontageMean_flag = true;
 
 
   EEG_Processing(int NCHAN, float sample_rate_Hz) {
@@ -243,6 +244,16 @@ class EEG_Processing {
     currentNotch_ind++;
     if (currentNotch_ind >= N_NOTCH_CONFIGS) currentNotch_ind = 0;
   }
+  public void toggleZeroMontageMean() {
+    zeroMontageMean_flag = !zeroMontageMean_flag;
+  }
+  public String getZeroMontageMeanTrueFalse() {
+    if (zeroMontageMean_flag) {
+      return "True";
+    } else {
+      return "False";
+    }
+  }
 
   public void process(float[][] data_newest_uV, //holds raw EEG data that is new since the last call
   float[][] data_long_uV, //holds a longer piece of buffered EEG data, of same length as will be plotted on the screen
@@ -276,7 +287,11 @@ class EEG_Processing {
       double overall_mean = overall_sum / (8.0);  //forcing to 8 channels.  Kludge!  WEA 2016-01-25
       for (int Ichan=0;Ichan < nchan; Ichan++) {  
         //data_std_uV[Ichan] -= overall_mean;  //normal behavior
-        if (Ichan < 8) data_std_uV[Ichan] -= overall_mean;  //force mean to zero.  ignore top 8 channels.  Kludge!  WEA 2016-01-25
+        if (zeroMontageMean_flag) {
+          if (Ichan < 8) data_std_uV[Ichan] -= overall_mean;  //force mean to zero.  ignore top 8 channels.  Kludge!  WEA 2016-01-25
+        } else {
+          //println("EEG_processing: not removing mean");
+        }
         polarity[Ichan] = 1.0;
         if (data_std_uV[Ichan] < 0.0) polarity[Ichan] = -1.0; 
       }

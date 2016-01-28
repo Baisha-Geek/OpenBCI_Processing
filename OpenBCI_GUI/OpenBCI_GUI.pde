@@ -915,6 +915,10 @@ void mousePressed() {
             gui.takeDCNowButton.setIsActive(true);
             takeDCValuesNow();
           }
+          if (gui.zeroMontageMeanButton.isMouseHere()) {
+            gui.zeroMontageMeanButton.setIsActive(true);
+            toggleZeroMontageMean();
+          }
           
     //      //check the detection button
     //      if (gui.detectButton.updateIsMouseHere()) {
@@ -1336,6 +1340,16 @@ void delay(int delay)
   while(millis() - time <= delay);
 }
 
+
+void takeDCValuesNow() {
+  flag_takeNewDCvalues = true;
+}
+
+void toggleZeroMontageMean() {
+  eegProcessing.toggleZeroMontageMean();
+  gui.zeroMontageMeanButton.but_txt = "Zero Mean\n" + eegProcessing.getZeroMontageMeanTrueFalse();
+}
+
 // here's a function to catch whenever the window is being closed, so that
 // it stops OpenBCI
 // from: http://forum.processing.org/one/topic/run-code-on-exit.html
@@ -1362,6 +1376,3 @@ void delay(int delay)
 //  );
 // }  
 
-void takeDCValuesNow() {
-  flag_takeNewDCvalues = true;
-}

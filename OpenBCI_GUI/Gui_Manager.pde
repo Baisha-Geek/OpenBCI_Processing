@@ -46,6 +46,7 @@ class Gui_Manager {
   Button maxDisplayFreqButton;
   Button showPolarityButton;
   Button takeDCNowButton;
+  Button zeroMontageMeanButton;
 
   //these two buttons toggle between EEG graph state (they are mutually exclusive states)
   Button showMontageButton; // to show uV time graph as opposed to channel controller
@@ -274,6 +275,9 @@ class Gui_Manager {
     w = 70;    
     h = 26;
     y = 2;
+
+    x = calcButtonXLocation(Ibut++, win_x, w, xoffset,gutter_between_buttons);
+    zeroMontageMeanButton = new Button(x,y,w,h,"Zero Mean\n" + eegProcessing.getZeroMontageMeanTrueFalse(),fontInfo.buttonLabel_size);
 
     x = calcButtonXLocation(Ibut++, win_x, w, xoffset,gutter_between_buttons);
     takeDCNowButton = new Button(x,y,w,h,"Zero DC\n" + "Now",fontInfo.buttonLabel_size);
@@ -855,6 +859,7 @@ class Gui_Manager {
         showPolarityButton.draw();
         maxDisplayFreqButton.draw();
         takeDCNowButton.draw();
+        zeroMontageMeanButton.draw();
         break;
       default:  //assume GUI_PAGE_CHANNEL_ONOFF:
         //show channel buttons
@@ -936,6 +941,7 @@ class Gui_Manager {
     showPolarityButton.setIsActive(false);
     maxDisplayFreqButton.setIsActive(false);
     takeDCNowButton.setIsActive(false);
+    zeroMontageMeanButton.setIsActive(false);
     biasButton.setIsActive(false);
   }
   
